@@ -1,0 +1,42 @@
+<mxfile host="Electron">
+  <diagram name="Página-1" id="pfFObfbW5cp0I-vUw3O2">
+    <mxGraphModel dx="646" dy="684" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="OSpJrI23cyEod5S_RJBV-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;fillOpacity=0;" value="" vertex="1">
+          <mxGeometry height="340" width="570" x="129" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-2" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontStyle=1;fontFamily=Times New Roman;fontSize=15;" value="Computadora local (Windows) - Entorno experimental para Syncthing" vertex="1">
+          <mxGeometry height="30" width="464.5" x="129" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-8" edge="1" parent="1" source="OSpJrI23cyEod5S_RJBV-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;startArrow=classic;startFill=1;" target="OSpJrI23cyEod5S_RJBV-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-9" connectable="0" parent="OSpJrI23cyEod5S_RJBV-8" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;defaultLabelBackgroundColor=page;" value="Sincronización de archivos (BEP)" vertex="1">
+          <mxGeometry relative="1" x="-0.0011" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-10" edge="1" parent="1" source="OSpJrI23cyEod5S_RJBV-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;" target="OSpJrI23cyEod5S_RJBV-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Nodo A - Syncthing" vertex="1">
+          <mxGeometry height="60" width="120" x="169" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-11" edge="1" parent="1" source="OSpJrI23cyEod5S_RJBV-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=page;" target="OSpJrI23cyEod5S_RJBV-7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=light-dark(#ffeceb, #512d2b);strokeColor=#b85450;" value="Nodo B - Syncthing" vertex="1">
+          <mxGeometry height="60" width="120" x="550" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-6" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.folder;labelPerimeter=1;" value="Carpeta A - prueba-sync" vertex="1">
+          <mxGeometry height="71" width="78" x="190" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="OSpJrI23cyEod5S_RJBV-7" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.folder;labelPerimeter=1;" value="Carpeta B - prueba-sync" vertex="1">
+          <mxGeometry height="71" width="78" x="571" y="380" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
