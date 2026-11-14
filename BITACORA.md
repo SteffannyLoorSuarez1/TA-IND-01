@@ -81,3 +81,23 @@
 **Estado:** Dos instancias de Syncthing configuradas y comprobadas. Pendiente la conexión entre los nodos y las pruebas de sincronización.
 
 ---
+
+## 14 de noviembre de 2026 — Pruebas de sincronización y recuperación
+
+**Tiempo dedicado:** aproximadamente 3 horas.
+
+**Actividades realizadas:**
+
+- Se conectaron los nodos A y B de Syncthing v2.1.7, ejecutados como procesos independientes en la misma computadora.
+- Se configuró la carpeta compartida `prueba-sync`, utilizando directorios diferentes para cada nodo.
+- Se creó el archivo `prueba.txt` en el Nodo A y se comprobó que apareciera en el Nodo B.
+- Se calcularon los hashes SHA-256 de ambos archivos. La comparación dio `True`, lo que confirmó que tenían el mismo contenido.
+- Se apagó el Nodo B y se modificó el archivo del Nodo A. Durante la desconexión, los hashes fueron diferentes (`False`).
+- Se reinició el Nodo B y se comprobó que Syncthing recuperó la sincronización. Los hashes volvieron a coincidir (`True`).
+- Se guardaron capturas y resultados de las pruebas en el repositorio.
+
+**Observaciones:**
+
+La primera prueba permitió comprobar la replicación de archivos entre los dos nodos. En la segunda, el Nodo A pudo seguir modificando su archivo mientras el Nodo B estaba desconectado. Cuando este volvió a funcionar, Syncthing sincronizó los cambios pendientes.
+
+**Limitación:** ambos nodos se ejecutaron en una misma computadora, por lo que las pruebas no demuestran tolerancia a fallos físicos de equipos independientes.

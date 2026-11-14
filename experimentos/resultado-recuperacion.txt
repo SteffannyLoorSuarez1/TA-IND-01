@@ -1,0 +1,39 @@
+EXPERIMENTO 2 - INTERRUPCION Y RECUPERACION DE SYNCTHING
+
+Entorno:
+Syncthing v2.1.7
+Sistema operativo: Windows
+Dos procesos en una misma computadora.
+
+Procedimiento:
+1. Se detuvo el proceso del Nodo B.
+2. Se modifico prueba.txt en el Nodo A mediante Add-Content.
+3. Se compararon los hashes SHA-256 con el Nodo B desconectado.
+4. Se reinicio el Nodo B.
+5. Se verifico nuevamente la integridad de los archivos.
+
+RESULTADOS DURANTE LA DESCONEXION
+
+SHA256 Nodo A:
+7F4795DC531D6F86D1758EE67E8E4904C8446988B4BC406A1A01E54F412D47BB
+
+SHA256 Nodo B:
+BF06630938195440F3021BA2EB08F8EFA7EF546311DC580B077F08ADFFFE460A
+
+Coinciden: False
+
+RESULTADOS DESPUES DE LA RECUPERACION
+
+SHA256 Nodo A: 7F4795DC531D6F86D1758EE67E8E4904C8446988B4BC406A1A01E54F412D47BB
+SHA256 Nodo B: 7F4795DC531D6F86D1758EE67E8E4904C8446988B4BC406A1A01E54F412D47BB
+Coinciden: True
+
+Interpretacion:
+Durante la desconexion, el Nodo A pudo modificar su archivo,
+mientras el Nodo B conservaba la version anterior.
+Al reiniciar el Nodo B, Syncthing recupero la sincronizacion
+y ambos archivos volvieron a tener el mismo contenido.
+
+Limitacion:
+La prueba se realizo con dos procesos en una sola computadora.
+No demuestra tolerancia a fallos fisicos independientes.
