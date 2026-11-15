@@ -94,7 +94,57 @@
 - Se calcularon los hashes SHA-256 de ambos archivos. La comparación dio `True`, lo que confirmó que tenían el mismo contenido.
 - Se apagó el Nodo B y se modificó el archivo del Nodo A. Durante la desconexión, los hashes fueron diferentes (`False`).
 - Se reinició el Nodo B y se comprobó que Syncthing recuperó la sincronización. Los hashes volvieron a coincidir (`True`).
-- Se guardaron capturas y resultados de las pruebas en el repositorio.
+
+
+Se organizaron las capturas de pantalla y los resultados de las pruebas en las carpetas evidencias/ y experimentos/.
+
+Se completó el diagrama de arquitectura de Syncthing y se incorporó al informe junto con el bosquejo inicial.
+
+Se desarrolló el análisis de las transparencias de distribución, consistencia, CAP, PACELC, disponibilidad y tolerancia a fallos.
+
+Se elaboró la comparación documental entre Syncthing y Unison, considerando sus diferencias de arquitectura, sincronización y tratamiento de conflictos.
+
+Se redactaron las conclusiones a partir de los resultados obtenidos y de las limitaciones del laboratorio.
+
+Se incorporaron las evidencias experimentales, las referencias bibliográficas y los anexos al documento LaTeX.
+
+Se revisaron los errores de formato, los nombres de archivos, las referencias a figuras y la presentación de las tablas.
+
+Se compiló el informe mediante pdflatex y biber, y se revisó el PDF generado.
+
+
+oblemas encontrados:
+
+Fue necesario distinguir entre la interrupción de un proceso y una partición de red para no interpretar incorrectamente el experimento.
+
+Algunos nombres de archivos demasiado largos sobrepasaban el margen derecho del documento.
+
+Se encontraron títulos duplicados en los anexos y diferencias entre la denominación de tablas y cuadros.
+
+Al actualizar el PDF compilado, Git registró una cantidad elevada de líneas modificadas.
+
+oblemas encontrados:
+
+Fue necesario distinguir entre la interrupción de un proceso y una partición de red para no interpretar incorrectamente el experimento.
+
+Algunos nombres de archivos demasiado largos sobrepasaban el margen derecho del documento.
+
+Se encontraron títulos duplicados en los anexos y diferencias entre la denominación de tablas y cuadros.
+
+Al actualizar el PDF compilado, Git registró una cantidad elevada de líneas modificadas.
+
+Soluciones aplicadas:
+
+Se aclararon las limitaciones del experimento y se evitó presentar la recuperación de un proceso como una prueba de tolerancia a fallos físicos.
+
+Se utilizó el comando \path{} de LaTeX para permitir que los nombres de archivos se ajustaran al ancho de la página.
+
+Se corrigieron los títulos duplicados y la presentación de las tablas.
+
+Se revisó el historial de Git y se comprobó que la mayor parte de las diferencias registradas correspondían al archivo PDF.
+
+Se verificó que el último commit se hubiera subido correctamente a la rama main.
+
 
 **Observaciones:**
 

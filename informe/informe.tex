@@ -418,6 +418,45 @@ convergencia y recuperación de procesos, pero no permiten generalizar el compor
 
 \section{Comparación crítica con Unison}
 
+\begin{table}[H]
+\centering
+\small
+\caption{Comparación documental entre Syncthing y Unison}
+\label{tab:syncthing-unison}
+\begin{tabular}{p{3cm}p{4.6cm}p{4.6cm}}
+\toprule
+\textbf{Criterio} & \textbf{Syncthing} & \textbf{Unison} \\
+\midrule
+Arquitectura &
+Modelo P2P entre dispositivos autorizados. &
+Sincronización entre dos réplicas. \\
+
+Comunicación &
+Intercambio de índices y bloques mediante BEP. &
+Comunicación local o remota, por ejemplo mediante SSH. \\
+
+Replicación &
+Mantiene copias de carpetas compartidas en los dispositivos. &
+Mantiene sincronizadas dos ubicaciones de archivos. \\
+
+Consistencia &
+Los cambios pueden propagarse después de una desconexión. &
+Reconcilia los cambios detectados entre ambas réplicas. \\
+
+Concurrencia &
+Puede conservar archivos adicionales cuando detecta conflictos. &
+Permite revisar y resolver conflictos entre réplicas. \\
+
+Recuperación &
+Retoma la sincronización cuando vuelve la comunicación. &
+Permite sincronizar cambios pendientes en una ejecución posterior. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:syncthing-unison} resume las
+principales diferencias documentadas entre ambas
+herramientas \cite{syncthingBEP,syncthingSyncing,unisonOfficial}.
 
 \subsection{Arquitectura y comunicación}
 
