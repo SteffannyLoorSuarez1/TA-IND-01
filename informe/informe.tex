@@ -4,6 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-nodecimaldot]{babel}
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
 
 \usepackage{geometry}
 \geometry{margin=2.5cm}
@@ -128,7 +129,7 @@ El Nodo A y el Nodo B utilizaron directorios de configuración y carpetas locale
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.90\textwidth]{arquitectura-syncthing.png}
-    \caption{Arquitectura del entorno experimental de Syncthing con dos procesos independientes en una computadora Windows.}
+    \caption{Arquitectura del entorno experimental de Syncthing con dos procesos independientes en una computadora Windows. Fuente: Elaboración propia}
     \label{fig:arquitectura-syncthing}
 \end{figure}
 
@@ -417,7 +418,76 @@ convergencia y recuperación de procesos, pero no permiten generalizar el compor
 
 \section{Comparación crítica con Unison}
 
+
+\subsection{Arquitectura y comunicación}
+
+Syncthing y Unison permiten mantener archivos sincronizados entre diferentes ubicaciones, 
+pero utilizan enfoques distintos. Syncthing trabaja mediante dispositivos que comparten carpetas e intercambian información sobre los archivos disponibles. Su protocolo BEP permite comunicar índices y solicitar los bloques necesarios para actualizar las copias \cite{syncthingBEP,syncthingSyncing}.
+Unison, en cambio, se centra en sincronizar dos réplicas de archivos. Puede trabajar con carpetas ubicadas en 
+una misma computadora o en equipos diferentes, y normalmente utiliza SSH o una conexión TCP directa para comunicarse \cite{unisonOfficial}.
+Esta diferencia resulta importante al relacionarla con nuestro laboratorio. Para probar Syncthing 
+fue necesario configurar dos instancias, identificar los dispositivos y establecer la carpeta compartida. En Unison, la configuración se organiza alrededor de las dos ubicaciones que se desean sincronizar.
+Por tanto, Syncthing resulta adecuado cuando se busca mantener carpetas compartidas entre varios dispositivos, mientras que Unison ofrece un enfoque más directo para sincronizar dos réplicas. Esto no significa que uno sea superior en todos los casos, sino que responden a necesidades de organización diferentes.
+
+\subsection{Sincronización y consistencia}
+
+Syncthing detecta modificaciones en los archivos y utiliza información sobre sus versiones para determinar qué contenido necesita actualizarse. También compara 
+bloques mediante hashes para transferir la información necesaria \cite{syncthingSyncing}.
+Unison compara el estado de dos réplicas con la información conservada de sincronizaciones 
+anteriores. A partir de esa comparación identifica los cambios y determina cuáles pueden propagarse y cuáles presentan conflictos \cite{unisonOfficial}.
+En nuestro primer experimento, Syncthing sincronizó correctamente el archivo creado en el Nodo A. La coincidencia de los hashes 
+SHA-256 permitió comprobar que ambas copias terminaron con el mismo contenido.
+Este resultado demuestra la sincronización del archivo, pero no permite concluir que Syncthing sea más consistente que Unison. 
+Para establecer esa diferencia sería necesario ejecutar pruebas equivalentes en ambas herramientas y definir previamente qué garantías de consistencia se desean comparar.
+
+\subsection{Conflictos y modificaciones concurrentes}
+
+En los sistemas distribuidos, las modificaciones concurrentes pueden generar situaciones en las que dos copias contienen cambios diferentes. 
+Este problema está relacionado con la coordinación y la consistencia de los datos replicados \cite{ahmed2023}.
+Syncthing puede detectar modificaciones conflictivas y conservar una de las versiones mediante un archivo identificado como conflicto. Unison también detecta cambios incompatibles entre sus dos 
+réplicas y permite que el usuario decida cómo resolverlos \cite{syncthingSyncing,unisonOfficial}.
+La diferencia principal se encuentra en la forma de presentar y gestionar estos conflictos. Syncthing puede generar una copia de conflicto, mientras que Unison 
+permite revisar las acciones de reconciliación antes de aplicarlas.
+Sin embargo, en nuestros experimentos solamente se modificó el archivo del Nodo A mientras el 
+Nodo B estaba detenido. No se realizaron modificaciones simultáneas en las dos copias. Por ello, no sería correcto afirmar que comprobamos experimentalmente la resolución de conflictos de Syncthing ni compararla con la de Unison.
+
+\subsection{Disponibilidad y recuperación}
+
+Ambas herramientas mantienen copias locales de los archivos. Esto permite que los usuarios accedan a la información almacenada en sus equipos aunque 
+no exista comunicación con la otra réplica \cite{syncthingFAQ,unisonOfficial}.
+En Syncthing, los cambios pendientes pueden propagarse cuando los dispositivos vuelven a comunicarse. Unison también contempla la 
+sincronización posterior de modificaciones realizadas por separado en sus dos réplicas \cite{syncthingSyncing,unisonOfficial}.
+Durante el segundo experimento se detuvo el Nodo B y se modificó el archivo del Nodo A. Los hashes fueron diferentes mientras la segunda instancia permaneció detenida. 
+Después de reiniciarla, ambas copias volvieron a coincidir.
+Este resultado permitió comprobar la recuperación de la sincronización en Syncthing. No obstante, no demuestra que Unison tenga un comportamiento mejor o peor ante la misma interrupción, porque no se ejecutó una prueba equivalente con esa herramienta.
+También es necesario distinguir esta recuperación de una prueba de tolerancia a fallos físicos. Ambos procesos de Syncthing 
+funcionaron en una misma computadora, por lo que no se evaluó la pérdida de un equipo independiente.
+
+\subsection{Valoración crítica}
+
+La comparación permite reconocer que Syncthing y Unison resuelven un problema semejante mediante mecanismos diferentes. Syncthing se orienta a la sincronización entre dispositivos que intercambian información sobre archivos y bloques. Unison se enfoca en reconciliar dos réplicas y 
+ofrece al usuario control sobre las acciones que se realizarán cuando existen conflictos \cite{syncthingSyncing,unisonOfficial}.
+A partir del laboratorio, considero que una de las características más importantes de Syncthing es su capacidad para recuperar cambios pendientes después de una interrupción temporal. 
+Esto se comprobó mediante la coincidencia de los hashes SHA-256 antes y después de detener una instancia.
+Sin embargo, también comprendí que mantener copias de un archivo no significa que todas estén actualizadas permanentemente. 
+La replicación facilita disponer de información en diferentes ubicaciones, pero requiere mecanismos de sincronización y tratamiento de conflictos \cite{vansteen2023,ahmed2023}.
+Por otra parte, Unison constituye una alternativa pertinente cuando se necesita sincronizar específicamente dos ubicaciones. 
+Su documentación indica que también permite trabajar con réplicas locales, una característica especialmente relevante para un escenario como el utilizado en nuestro laboratorio \cite{unisonOfficial}.
+En consecuencia, no es posible declarar un ganador general a partir de este trabajo. Syncthing fue evaluado experimentalmente, mientras que Unison se estudió mediante documentación técnica. 
+La elección entre ambos depende del número de réplicas, la forma de comunicación, el control requerido sobre los conflictos y las condiciones de uso.
+
 \section{Conclusiones}
+
+El desarrollo de esta práctica permitió comprender mejor cómo funciona la sincronización de archivos en un sistema distribuido. A través de Syncthing se observó que mantener varias copias de un archivo no significa que todas estén actualizadas al mismo tiempo, 
+ya que los cambios deben detectarse y propagarse entre los nodos.
+En el primer experimento se comprobó que un archivo creado en el Nodo A podía sincronizarse con el Nodo B. 
+La coincidencia de los hashes SHA-256 permitió verificar que ambas copias tenían el mismo contenido después de completar la sincronización. Esto ayudó a relacionar el funcionamiento de Syncthing con la replicación de datos y la comunicación entre procesos.
+El segundo experimento permitió identificar una diferencia importante entre consistencia y disponibilidad. 
+Mientras el Nodo B permaneció detenido, el Nodo A continuó funcionando y su archivo pudo modificarse, pero los cambios no llegaron inmediatamente a la otra copia. Después de reiniciar el Nodo B, los hashes volvieron a coincidir, lo que evidenció la recuperación de la sincronización y la convergencia de los datos.
+También se comprendió que una interrupción de un proceso no es lo mismo que una partición de red. Por esta razón, los resultados obtenidos no permiten clasificar formalmente a Syncthing mediante CAP ni demostrar tolerancia a fallos físicos, especialmente porque ambas instancias se ejecutaron en una misma computadora.
+La comparación con Unison permitió reconocer que existen diferentes formas de resolver el problema de sincronización.
+ Mientras Syncthing utiliza un modelo de dispositivos que comparten carpetas e intercambian información sobre sus archivos, Unison se enfoca en sincronizar dos réplicas. Sin embargo, esta comparación fue documental y no experimental, por lo que no se puede afirmar que una herramienta tenga mejor rendimiento que la otra.
+En conclusión, lo más importante de la práctica fue comprender que la replicación, la consistencia, la disponibilidad y la tolerancia a fallos son conceptos relacionados, pero no equivalentes. Los experimentos demostraron la sincronización y recuperación de archivos en las condiciones evaluadas, y también permitieron reconocer las limitaciones de las pruebas realizadas.
 
 \printbibliography[title={Referencias bibliográficas}]
 
@@ -425,6 +495,77 @@ convergencia y recuperación de procesos, pero no permiten generalizar el compor
 
 \section{Bosquejo inicial de arquitectura}
 
-\section{Evidencias de ejecución y experimentación}
+Antes de configurar Syncthing se realizó un bosquejo
+de la arquitectura propuesta para el laboratorio.
+Este esquema permitió organizar la comunicación entre
+las dos instancias y las carpetas que se utilizarían
+durante las pruebas.
+
+La Figura~\ref{fig:bosquejo-inicial} presenta el
+bosquejo elaborado durante la planificación.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]
+    {bosquejo-inicial-syncthing.jpeg}
+    \caption{Bosquejo inicial de la arquitectura
+    del laboratorio con Syncthing.}
+    \label{fig:bosquejo-inicial}
+\end{figure}
+
+\section{Evidencias complementarias}
+
+Las capturas adicionales del laboratorio se encuentran
+organizadas en la carpeta \path{evidencias/} del
+repositorio de GitHub. Estas documentan la configuración
+de los dispositivos, la aceptación de solicitudes,
+la creación de la carpeta compartida y la ejecución
+de las pruebas.
+
+Los resultados de las comprobaciones se conservaron
+en los archivos \path{resultado-sincronizacion.txt}
+y \path{resultado-recuperacion.txt}, ubicados en
+la carpeta \path{experimentos/}.
+
+Estas evidencias complementan las figuras presentadas
+en el informe y permiten revisar el procedimiento
+realizado.
+
+
+\section*{Declaración de uso de inteligencia artificial}
+\addcontentsline{toc}{section}
+{Declaración de uso de inteligencia artificial}
+
+Durante la elaboración de este trabajo se utilizó
+ChatGPT basado en el modelo GPT-6 de OpenAI, mediante su versión
+web como herramienta de apoyo para organizar
+la estructura del informe, mejorar la redacción de lo que ya tenía escrito
+y comprender conceptos relacionados con los
+sistemas distribuidos.
+
+También se utilizó como apoyo para preparar
+fragmentos de código LaTeX y organizar las
+referencias bibliográficas.
+
+La configuración de Syncthing, la ejecución de
+los experimentos, las capturas de pantalla y
+las comprobaciones mediante SHA-256 corresponden
+al trabajo práctico realizado por mi autoría. Los resultados
+se analizaron considerando las condiciones y
+limitaciones en las que se desarrollaron los experimentos.
+
+Finalmente, se revisó el contenido del informe, se verificó la presentación de 
+las referencias y evidencias, y se compiló el documento en formato PDF para 
+comprobar que no existieran errores de formato.
+
+Como ejemplo del tipo de consulta realizada,
+se presenta el siguiente prompt:
+
+\begin{quote}
+\textit{``Revisa el siguiente párrafo que redacté
+sobre la consistencia de datos en Syncthing.
+Ayúdame a corregir los errores de ortografía,
+gramática y redacción, sin cambiar mis ideas.''}
+\end{quote}
 
 \end{document}
