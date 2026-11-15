@@ -132,3 +132,76 @@ La comparación con Unison es documental y no incluye resultados experimentales 
 El desarrollo de esta actividad permitió comprender mejor cómo funciona la sincronización de archivos en un sistema distribuido y observar la recuperación de la sincronización después de una interrupción temporal.
 
 También permitió identificar diferencias entre Syncthing y Unison y relacionar los resultados de las pruebas con los conceptos estudiados en la asignatura de Aplicaciones Distribuidas.
+
+## Instrucciones de compilación
+
+El informe académico está desarrollado en **LaTeX** y utiliza **Biber** para gestionar las referencias bibliográficas mediante el paquete `biblatex`, con estilo IEEE.
+
+### 1. Requisitos previos
+
+Para compilar el informe se necesita:
+
+- **MiKTeX** o **TeX Live**, con `pdflatex` disponible.
+- **Biber**, para procesar las referencias bibliográficas.
+- **Git**, para clonar el repositorio (opcional).
+- Un editor como Visual Studio Code (opcional).
+
+### 2. Descargar el repositorio
+
+Abrir PowerShell y ejecutar:
+
+```powershell
+git clone https://github.com/SteffannyLoorSuarez1/TA-IND-01.git
+cd TA-IND-01
+```
+
+También se puede descargar el proyecto desde GitHub mediante **Code → Download ZIP** y extraer su contenido.
+
+### 3. Acceder a la carpeta del informe
+
+Desde la raíz del repositorio, ejecutar:
+
+```powershell
+cd informe
+```
+
+Es importante realizar la compilación desde esta carpeta, ya que el archivo `informe.tex` utiliza rutas relativas para acceder a las figuras, evidencias y referencias bibliográficas.
+
+### 4. Compilar el documento
+
+Ejecutar los siguientes comandos en este orden:
+
+```powershell
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+biber informe
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+```
+
+La primera ejecución de `pdflatex` genera los archivos auxiliares. Después, `biber` procesa las referencias bibliográficas. Las dos ejecuciones finales de `pdflatex` actualizan las citas, referencias cruzadas y bibliografía.
+
+### 5. Abrir el informe generado
+
+Al finalizar, se genera el archivo:
+
+```text
+informe/informe.pdf
+```
+
+En Windows, se puede abrir desde PowerShell con:
+
+```powershell
+start informe.pdf
+```
+
+### 6. Consultar el informe sin compilar
+
+Si únicamente se desea revisar el trabajo, no es necesario instalar LaTeX.
+
+El PDF está disponible directamente en el repositorio:
+
+[Ver informe final en PDF](informe/informe.pdf)
+
+### Nota
+
+Si MiKTeX solicita instalar paquetes faltantes durante la primera compilación, se deben instalar para continuar. También es necesario comprobar que Biber esté disponible en el sistema.
