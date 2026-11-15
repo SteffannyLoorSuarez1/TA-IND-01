@@ -23,8 +23,7 @@
 ]{biblatex}
 
 \addbibresource{../referencias/referencias.bib}
-\graphicspath{{../figuras/}{../anexos/}}
-
+\graphicspath{{../figuras/}{../anexos/}{../evidencias/}}
 \begin{document}
 
 
@@ -257,6 +256,164 @@ uno de sus procesos. Sin embargo, esta recuperación no debe confundirse con una
 Si el equipo físico, su sistema operativo o su almacenamiento fallaran, las dos instancias podrían verse afectadas simultáneamente. Por ello, los resultados obtenidos permiten afirmar que se recuperó la sincronización tras una interrupción temporal de un proceso, pero no que el sistema haya demostrado tolerancia a fallos físicos independientes.
 
 \section{Experimentos y análisis de resultados}
+
+\subsection{Entorno de pruebas}
+
+Para evaluar el funcionamiento de Syncthing se utilizó la versión 2.1.7 en una computadora con Windows. Se ejecutaron dos instancias independientes de la aplicación, identificadas como Nodo A y Nodo B, cada una con su propia configuración y carpeta de sincronización.
+Las interfaces de administración se configuraron en los puertos locales 8384 y 8385, respectivamente. Ambas instancias compartieron una carpeta identificada mediante el ID \texttt{prueba-sync}.
+Aunque los procesos funcionaban de manera independiente, se ejecutaban sobre el mismo equipo físico. Esta condición permitió estudiar la comunicación y sincronización entre procesos, pero no evaluar fallos de computadoras independientes.
+Para comprobar la integridad del contenido se utilizó el algoritmo SHA-256, comparando los hashes de los archivos almacenados en las carpetas de ambos nodos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]
+    {08-conexion-nodo-a-con-nodo-b.png}
+    \caption{Conexión entre las instancias de Syncthing.}
+    \label{fig:conexion-nodos}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]
+    {10-carpeta-compartida-nodo-b.png}
+    \caption{Carpeta compartida configurada en el Nodo B.}
+    \label{fig:carpeta-compartida}
+\end{figure}
+
+\subsection{Experimento 1: sincronización de archivos}
+
+\subsubsection{Objetivo}
+
+Comprobar que un archivo creado en el Nodo A pudiera sincronizarse con el Nodo B y verificar que ambas copias tuvieran el mismo contenido.
+
+\subsubsection{Procedimiento}
+
+Primero, se comprobó que las dos instancias de Syncthing estuvieran en ejecución y que la carpeta compartida estuviera configurada en ambos nodos.
+Después, se creó un archivo de prueba en la carpeta del Nodo A. Se esperó a que Syncthing detectara el cambio y completara la sincronización con el Nodo B.
+Finalmente, se verificó la existencia del archivo en ambas carpetas y se compararon sus hashes SHA-256.
+
+\subsubsection{Resultado y análisis}
+
+El archivo creado en el Nodo A apareció en la carpeta del Nodo B. Además, los hashes SHA-256 coincidieron, 
+lo que permitió comprobar que las dos copias tenían el mismo contenido con un alto grado de confianza.
+Este resultado demuestra que las instancias intercambiaron la información necesaria para sincronizar el archivo. 
+Se relaciona con la replicación de datos, ya que el contenido quedó disponible en dos carpetas distintas, y con la transparencia de acceso, porque el usuario puede trabajar con archivos locales sin realizar manualmente cada transferencia \cite{vansteen2023,syncthingSyncing}.
+Sin embargo, este experimento no demuestra que los cambios se propaguen de forma instantánea ni que exista consistencia fuerte. 
+Únicamente se comprobó que, después de completar la sincronización, ambas copias coincidían.
+
+La Figura~\ref{fig:integridad-sha256} presenta la
+verificación de integridad realizada después de la
+sincronización inicial.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]
+    {15-verificacion-integridad-sha256.png}
+    \caption{Verificación de integridad mediante SHA-256
+    después de sincronizar el archivo.}
+    \label{fig:integridad-sha256}
+\end{figure}
+
+\subsection{Experimento 2: interrupción y recuperación de la sincronización}
+
+\subsubsection{Objetivo}
+
+Analizar qué ocurre cuando una de las instancias deja de funcionar temporalmente y 
+comprobar si los cambios pendientes se sincronizan después de reiniciarla.
+
+\subsubsection{Procedimiento}
+
+Con ambas instancias inicialmente sincronizadas, se detuvo el proceso correspondiente al Nodo B, mientras el Nodo A permaneció en ejecución.
+Durante la interrupción, se modificó el archivo de prueba en la carpeta del Nodo A. A continuación, 
+se compararon los hashes SHA-256 de ambas copias para identificar si existían diferencias.
+Posteriormente, se reinició el Nodo B y se esperó a que Syncthing completara 
+la sincronización. Finalmente, se volvieron a calcular los hashes para comprobar el estado de los archivos.
+
+\subsubsection{Resultado y análisis}
+
+Mientras el Nodo B permaneció detenido, los hashes SHA-256 de los archivos fueron diferentes. Esto confirmó que el Nodo A tenía una versión modificada que todavía no se había propagado al Nodo B.
+
+Como se muestra en la Figura~\ref{fig:hashes-diferentes},
+las copias presentaron hashes SHA-256 diferentes mientras
+el Nodo B permaneció detenido.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]
+    {18-hashes-diferentes-desconexion.png}
+    \caption{Diferencia entre los hashes SHA-256 durante
+    la interrupción del Nodo B.}
+    \label{fig:hashes-diferentes}
+\end{figure}
+
+Después de reiniciar el proceso, Syncthing recuperó la sincronización y los hashes volvieron a coincidir.
+
+La Figura~\ref{fig:hashes-recuperacion} muestra el
+resultado de la comprobación posterior al reinicio del
+Nodo B.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]
+    {20-hashes-iguales-recuperacion.png}
+    \caption{Coincidencia de hashes SHA-256 después
+    de recuperar la sincronización.}
+    \label{fig:hashes-recuperacion}
+\end{figure}
+
+Este comportamiento permite relacionar el experimento con la convergencia de las copias: durante la interrupción existió una diferencia 
+temporal, pero posteriormente ambas terminaron con el mismo contenido. Esto es compatible con un comportamiento de consistencia eventual, aunque la prueba no demuestra formalmente todas las garantías de ese modelo \cite{ahmed2023,syncthingSyncing}.
+También permite diferenciar la disponibilidad local de la disponibilidad de la sincronización. El Nodo A continuó funcionando y permitió modificar su archivo, pero el Nodo B no pudo recibir esos cambios mientras su proceso estaba detenido.
+Por otra parte, la recuperación observada demuestra que Syncthing pudo retomar la sincronización después de reiniciar 
+una instancia. No obstante, no se evaluó una partición de red ni un fallo físico, por lo que no sería correcto afirmar que el experimento demuestra completamente el teorema CAP o la tolerancia a fallos de equipos independientes.
+
+La Figura~\ref{fig:nodo-desconectado} documenta el
+estado de desconexión observado durante la prueba.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]
+    {17-nodo-b-desconectado.png}
+    \caption{Nodo B desconectado durante el segundo experimento.}
+    \label{fig:nodo-desconectado}
+\end{figure}
+
+\subsection{Comparación de los resultados}
+
+La Tabla~\ref{tab:resultados-experimentos} resume los resultados de ambas pruebas y su relación con los conceptos estudiados.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Resultados obtenidos en los experimentos con Syncthing}
+\label{tab:resultados-experimentos}
+\begin{tabular}{|p{2.7cm}|p{4.1cm}|p{5.0cm}|}
+\hline
+\textbf{Prueba} & \textbf{Resultado observado} & \textbf{Interpretación} \\
+\hline
+Sincronización inicial &
+El archivo apareció en el Nodo B y los hashes coincidieron. &
+Se comprobó la sincronización y equivalencia del contenido entre las dos copias. \\
+\hline
+Interrupción del Nodo B &
+Los hashes fueron diferentes después de modificar el archivo en el Nodo A. &
+La actualización no se propagó mientras el segundo proceso estaba detenido. \\
+\hline
+Recuperación del Nodo B &
+Después del reinicio, los hashes volvieron a coincidir. &
+Se comprobó la recuperación de la sincronización y la convergencia de las copias. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Limitaciones de las pruebas}
+
+Los experimentos permitieron comprobar la sincronización de archivos y la recuperación después de detener temporalmente uno de
+ los procesos. Sin embargo, los resultados deben interpretarse considerando las condiciones del laboratorio.
+Ambas instancias se ejecutaron en una sola computadora, por lo que no se evaluaron fallos de equipos físicos independientes. 
+Tampoco se realizaron pruebas con particiones reales de red, modificaciones simultáneas de un mismo archivo o mediciones de latencia.
+Por estas razones, los resultados respaldan las conclusiones sobre sincronización, 
+convergencia y recuperación de procesos, pero no permiten generalizar el comportamiento observado a todas las condiciones posibles de un sistema distribuido.
 
 \section{Comparación crítica con Unison}
 
