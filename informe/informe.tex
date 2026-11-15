@@ -68,6 +68,16 @@
 \end{titlepage}
 
 \begin{abstract}
+This report presents a critical analysis of Syncthing as a distributed system for file synchronization between devices. 
+It examines its architecture, inter-node communication, and behavior during interruptions, relating these aspects to distribution transparency, 
+the CAP and PACELC theorems, and fault tolerance. Syncthing is also compared with Unison to identify differences in their synchronization and recovery mechanisms.
+To supplement this analysis, two experiments were conducted using Syncthing v2.1.7 on a single computer (running the Windows operating system), 
+utilizing two independent processes and separate local folders. In the first experiment, a file was created on Node A, and its synchronization with Node B was verified by comparing SHA-256 hashes. In the second experiment, Node B was shut down while the file on Node A was modified. During the interruption, the hashes differed, but they matched again once the connection was restored.
+The results demonstrate that Syncthing successfully recovered synchronization after one of its processes was interrupted. However, since both 
+nodes were executed on the same computer, its behavior in the event of a failure involving distinct physical hardware was not evaluated.
+\end{abstract}
+
+\begin{abstract}
     En este informe se presenta un análisis crítico de Syncthing como sistema distribuido para la sincronización de archivos 
     entre dispositivos. Se estudia su arquitectura, comunicación entre nodos y su comportamiento frente a interrupciones, relacionando estos 
     aspectos con las transparencias de distribución, el teorema CAP, PACELC y la tolerancia a fallos. También se compara Syncthing con Unison para identificar 
@@ -137,9 +147,114 @@ Desde la perspectiva del usuario, la sincronización no requiere que todos los d
 Este comportamiento se analizará posteriormente mediante las evidencias del experimento de interrupción y recuperación.
 El diagrama representa únicamente los componentes configurados durante las pruebas. No se incluyeron servidores externos de descubrimiento ni de retransmisión porque no se verificó que participaran en la comunicación entre las dos instancias locales.
 
+
 \section{Propiedades y transparencias de distribución}
 
+Las transparencias de distribución buscan ocultar ciertos detalles del funcionamiento interno de un sistema distribuido para facilitar el acceso y uso de sus recursos. Entre ellas se encuentran las 
+transparencias de acceso, ubicación, migración, reubicación, replicación, concurrencia y fallos \cite{vansteen2023}.
+En Syncthing, estas propiedades no se presentan todas de la misma manera. Algunas se reflejan en el 
+funcionamiento habitual de la sincronización, mientras que otras tienen limitaciones o no fueron evaluadas directamente en las pruebas realizadas.
+
+\subsection{Transparencia de acceso}
+
+La transparencia de acceso busca ocultar las diferencias en la representación de los datos y en los mecanismos utilizados para acceder a un recurso \cite{vansteen2023}.
+En Syncthing, el usuario trabaja con archivos de una carpeta local sin tener que solicitar manualmente los bloques que se intercambian con otros dispositivos. El programa detecta modificaciones,
+ compara la información disponible y obtiene los bloques necesarios para actualizar los archivos \cite{syncthingSyncing}.
+Esta transparencia es parcial, porque el intercambio de datos se realiza automáticamente, pero el usuario todavía debe configurar las carpetas y autorizar los dispositivos participantes \cite{syncthingFAQ}.
+
+\subsection{Transparencia de ubicación}
+
+La transparencia de ubicación consiste en ocultar dónde se encuentra un recurso dentro del sistema distribuido \cite{vansteen2023}.
+Syncthing identifica los dispositivos mediante identificadores propios y puede utilizar mecanismos de descubrimiento para encontrar sus direcciones de conexión \cite{syncthingDiscovery}. 
+Esto reduce la necesidad de que el usuario conozca permanentemente la dirección de red de cada dispositivo.
+Sin embargo, la transparencia no es completa, porque las carpetas deben configurarse con rutas locales y los archivos solo están disponibles localmente si existe una copia en el dispositivo correspondiente \cite{syncthingFAQ}.
+
+\subsection{Transparencia de migración}
+
+La transparencia de migración busca ocultar que un recurso puede trasladarse de una ubicación a otra \cite{vansteen2023}.
+
+Syncthing permite sincronizar archivos entre diferentes dispositivos, pero esto no significa que ofrezca migración transparente de recursos. Su mecanismo principal consiste en mantener 
+y actualizar copias de archivos en las carpetas compartidas \cite{syncthingSyncing}.
+Por esta razón, no se considera demostrada una transparencia de migración completa. 
+En el experimento tampoco se trasladó una carpeta o un recurso entre ubicaciones durante su utilización.
+
+\subsection{Transparencia de reubicación}
+
+La transparencia de reubicación consiste en ocultar que un recurso cambia de ubicación mientras está siendo utilizado \cite{vansteen2023}.
+Esta propiedad es diferente de la migración, porque considera específicamente el traslado durante una operación en curso. Syncthing se centra en detectar cambios y sincronizar archivos, 
+no en mantener una operación de acceso abierta mientras un recurso cambia de ubicación \cite{syncthingSyncing}.
+En consecuencia, no se puede afirmar que el sistema proporcione esta transparencia de forma completa. Tampoco se realizaron pruebas que permitieran comprobarla.
+
+\subsection{Transparencia de replicación}
+
+La transparencia de replicación busca ocultar al usuario que existen varias copias de un mismo recurso \cite{vansteen2023}.
+En Syncthing, cada dispositivo conserva su propia copia de los archivos compartidos. El sistema compara las versiones conocidas y solicita los bloques necesarios cuando identifica diferencias \cite{syncthingSyncing}.
+En el primer experimento se creó un archivo en el Nodo A y posteriormente se comprobó que también estaba disponible en el Nodo B. La comparación de hashes SHA-256 permitió verificar que ambas copias tenían el mismo contenido.
+No obstante, la transparencia es parcial, porque el usuario puede identificar los dispositivos y carpetas compartidas, y las copias pueden presentar diferencias temporales cuando se interrumpe la comunicación.
+
+\subsection{Transparencia de concurrencia}
+
+La transparencia de concurrencia busca ocultar que varios usuarios o procesos pueden acceder a un mismo recurso de manera simultánea \cite{vansteen2023}.
+Syncthing permite que los dispositivos compartidos modifiquen sus copias locales. Sin embargo, si un mismo archivo recibe cambios 
+diferentes en varios dispositivos, pueden aparecer conflictos de sincronización. En determinadas circunstancias, el sistema conserva una versión adicional con un nombre que identifica el conflicto \cite{syncthingSyncing}.
+Por tanto, esta transparencia es limitada: Syncthing puede detectar conflictos, pero no garantiza que las modificaciones simultáneas se integren automáticamente en un único contenido. Este comportamiento no se evaluó directamente en los experimentos realizados.
+
+\subsection{Transparencia de fallos}
+
+La transparencia de fallos busca ocultar las interrupciones y la recuperación de los recursos, 
+de manera que afecten lo menos posible al uso del sistema \cite{vansteen2023}.
+En Syncthing, los archivos locales pueden seguir utilizándose aunque otro dispositivo se desconecte. 
+Las modificaciones pendientes pueden sincronizarse cuando vuelve a existir comunicación entre los nodos \cite{syncthingFAQ,syncthingSyncing}.
+En el segundo experimento se detuvo el proceso del Nodo B y se modificó un archivo en el Nodo A.
+ Mientras el Nodo B permaneció detenido, las copias presentaron hashes SHA-256 diferentes. 
+Después de reiniciar el proceso, los hashes volvieron a coincidir.
+Este resultado muestra una recuperación de la sincronización después de una interrupción temporal, 
+pero no una transparencia de fallos completa. Durante la desconexión, las copias no estuvieron actualizadas y ambos procesos dependían de una misma computadora.
+
 \section{Consistencia, disponibilidad y tolerancia a fallos}
+
+\subsection{Consistencia de los datos}
+
+La consistencia permite analizar las garantías que ofrece un sistema distribuido sobre la información almacenada en diferentes nodos. En los sistemas que mantienen copias de los mismos datos, 
+la coordinación entre los participantes influye en la actualización de la información y en el tiempo necesario para propagar los cambios \cite{ahmed2023,lee2023}.
+Syncthing mantiene información sobre las versiones de los archivos compartidos. Cuando los dispositivos se comunican, comparan los cambios conocidos y 
+solicitan los bloques necesarios para actualizar sus copias. Sin embargo, las modificaciones no tienen que reflejarse inmediatamente en todos los dispositivos, especialmente cuando alguno permanece desconectado \cite{syncthingSyncing,syncthingBEP}.
+Esta diferencia se observó en el segundo experimento. Después de detener el Nodo B, se modificó un archivo en el Nodo A. Al comparar sus hashes SHA-256, se comprobó que las dos copias tenían contenidos 
+diferentes. Posteriormente, al reiniciar el Nodo B, los hashes volvieron a coincidir.
+Este resultado permite relacionar el comportamiento observado con la convergencia de 
+datos: las copias terminaron teniendo el mismo contenido después de restablecer la comunicación. Sin embargo, no significa que Syncthing garantice consistencia fuerte, porque durante la interrupción las versiones eran diferentes. Tampoco basta una sola prueba para demostrar formalmente todas las garantías de un modelo de consistencia eventual.
+
+\subsection{Teorema CAP}
+El teorema CAP analiza las limitaciones que aparecen 
+cuando un sistema distribuido experimenta una partición de red. Sus propiedades son consistencia (C), disponibilidad (A) y tolerancia a particiones (P). Cuando se interrumpe la comunicación entre nodos, mantener garantías fuertes de consistencia puede entrar en conflicto con la posibilidad de responder a todas las solicitudes \cite{ahmed2023,lee2023}.
+En este contexto, la consistencia se refiere a una garantía fuerte sobre las operaciones realizadas con los datos compartidos. La disponibilidad exige que los nodos operativos puedan responder a las solicitudes, 
+mientras que la tolerancia a particiones considera la posibilidad de que algunos nodos no puedan comunicarse entre sí \cite{ahmed2023}.
+Syncthing permite trabajar con archivos almacenados localmente, 
+incluso cuando otro dispositivo está desconectado. Los cambios pueden realizarse en una copia y propagarse posteriormente, cuando se restablece la comunicación \cite{syncthingFAQ,syncthingSyncing}.
+Al contrastar CAP con nuestro experimento, es importante distinguir 
+una partición de red de la interrupción de un proceso. En una partición, los nodos pueden continuar ejecutándose, pero la comunicación entre ellos se encuentra interrumpida. En nuestra prueba, en cambio, se detuvo completamente el Nodo B mientras el Nodo A permaneció activo.
+Durante ese período, el archivo del Nodo A pudo modificarse, pero el Nodo B no recibió los cambios. Esto muestra que el trabajo local puede continuar sin una sincronización inmediata. Sin embargo, no demuestra directamente qué garantías ofrecería Syncthing si ambos procesos permanecieran activos y únicamente se bloqueara su comunicación.
+Por tanto, clasificar Syncthing como AP o CP basándose solo en este experimento sería una conclusión apresurada. Para analizarlo con mayor precisión sería necesario definir qué operaciones se consideran disponibles y realizar una prueba de partición de red, manteniendo ambos nodos en ejecución.
+
+\subsection{Modelo PACELC}
+
+El modelo PACELC amplía el análisis de CAP al considerar los compromisos que pueden existir incluso cuando no ocurre una partición. Durante una partición (P), plantea la relación entre disponibilidad (A) y consistencia (C). En condiciones normales (E), considera el compromiso entre latencia (L) y consistencia (C) \cite{ahmed2023}.
+Este modelo permite comprender que mantener datos coordinados entre varios nodos puede implicar tiempos adicionales de comunicación, aun cuando el sistema funciona sin interrupciones \cite{ahmed2023,lee2023}.
+En Syncthing, después de modificar un archivo, el sistema debe detectar el cambio, intercambiar información sobre las versiones y transferir los bloques necesarios para actualizar las demás copias \cite{syncthingSyncing,syncthingBEP}.
+En el primer experimento se comprobó que un archivo creado en el Nodo A terminó sincronizado en el Nodo B. Sin embargo, la prueba se centró en verificar la igualdad del contenido mediante hashes SHA-256, no en medir el tiempo transcurrido entre la modificación y la sincronización.
+Por esta razón, el experimento permite comprobar que los cambios se propagaron, pero no determinar cuánto tardaron ni demostrar un compromiso cuantitativo entre latencia y consistencia. PACELC resulta útil como marco teórico para analizar estas decisiones, aunque no sería correcto asignar a Syncthing una categoría PACELC específica sin estudiar sus garantías y medir su comportamiento.
+\subsection{Disponibilidad y tolerancia a fallos}
+
+La disponibilidad se relaciona con la posibilidad de utilizar los servicios 
+y recursos de un sistema cuando se necesitan. La tolerancia a fallos comprende los mecanismos que permiten mantener o recuperar su funcionamiento ante interrupciones. La replicación puede contribuir a estas propiedades, pero también introduce desafíos relacionados con la coordinación de las copias \cite{vansteen2023,samimi2025}.
+En Syncthing, los archivos permanecen almacenados en los dispositivos participantes. 
+Por ello, una copia local puede seguir utilizándose cuando otro dispositivo deja de estar conectado, aunque la sincronización de los cambios quede pendiente \cite{syncthingFAQ,syncthingSyncing}.
+Durante el segundo experimento se detuvo el proceso del Nodo B, mientras el Nodo A continuó funcionando. 
+Se modificó un archivo en el Nodo A y se verificó que los hashes SHA-256 de las dos copias eran diferentes. Después de reiniciar el Nodo B, ambos archivos volvieron a presentar el mismo hash.
+Este comportamiento permite diferenciar la disponibilidad local de la disponibilidad del servicio de sincronización. Mientras el Nodo B estuvo detenido, el Nodo A conservó la posibilidad de modificar su archivo, pero no fue posible mantener actualizadas ambas copias. Por tanto, la disponibilidad de los archivos locales no implica que la sincronización entre nodos permanezca disponible en todo momento.
+La coincidencia posterior de los hashes demuestra que Syncthing recuperó la sincronización después de reiniciar 
+uno de sus procesos. Sin embargo, esta recuperación no debe confundirse con una prueba completa de tolerancia a fallos, porque ambos procesos se ejecutaron en una misma computadora.
+Si el equipo físico, su sistema operativo o su almacenamiento fallaran, las dos instancias podrían verse afectadas simultáneamente. Por ello, los resultados obtenidos permiten afirmar que se recuperó la sincronización tras una interrupción temporal de un proceso, pero no que el sistema haya demostrado tolerancia a fallos físicos independientes.
 
 \section{Experimentos y análisis de resultados}
 
